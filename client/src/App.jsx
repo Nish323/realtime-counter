@@ -1,37 +1,35 @@
+// client/src/App.jsx
 import { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
-import Counter from './components/Counter';
+import Counter from './components/Counter/Counter';
 
-// ホスト名:4000 に Socket.IOで接続
+// ホスト名:4000 に Socket.IO で接続
 const socket = io(`http://${window.location.hostname}:4000`);
 
 function App() {
-  const [value, setValue] = useState(0);
+  const [counters, setCounters] = useState({ a: 0, b: 0 });
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
     socket.on('connect', () => setConnected(true));
     socket.on('disconnect', () => setConnected(false));
 
-    // サーバーからカウンター更新を受け取る
-    socket.on('counterUpdated', (val) => {
-      setValue(val);
+    // サーバーから2つ分まとめて受け取る
+    socket.on('countersUpdated', (newCounters) => {
+      setCounters(newCounters);
     });
 
     return () => {
       socket.off('connect');
       socket.off('disconnect');
-      socket.off('counterUpdated');
+      socket.off('countersUpdated');
     };
   }, []);
 
-  const handleIncrement = () => {
-    socket.emit('increment');
-  };
-
-  const handleReset = () => {
-    socket.emit('reset');
-  };
+  const incrementA = () => socket.emit('increment', 'a');
+  const incrementB = () => socket.emit('increment', 'b');
+  const resetA = () => socket.emit('reset', 'a');
+  const resetB = () => socket.emit('reset', 'b');
 
   return (
     <div
@@ -48,11 +46,6 @@ function App() {
       }}
     >
       <h1 style={{ fontSize: '28px', margin: 0 }}>リアルタイム共有カウンター</h1>
-      <p style={{ margin: 0, color: '#555', textAlign: 'center' }}>
-        同じページを開いている全端末で
-        <br />
-        カウント値がリアルタイムに共有されます。
-      </p>
 
       <div
         style={{
@@ -64,15 +57,15 @@ function App() {
       >
         <Counter
           label="カウンター A"
-          value={value}
-          onIncrement={handleIncrement}
-          onReset={handleReset}
+          value={counters.a}
+          onIncrement={incrementA}
+          onReset={resetA}
         />
         <Counter
           label="カウンター B"
-          value={value}
-          onIncrement={handleIncrement}
-          onReset={handleReset}
+          value={counters.b}
+          onIncrement={incrementB}
+          onReset={resetB}
         />
       </div>
 
