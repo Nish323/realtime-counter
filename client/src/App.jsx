@@ -31,6 +31,9 @@ function App() {
   const resetA = () => socket.emit('reset', 'a');
   const resetB = () => socket.emit('reset', 'b');
 
+  // 差分（最後尾 - 先頭） = B - A
+  const diff = counters.b - counters.a;
+
   return (
     <div
       style={{
@@ -45,7 +48,9 @@ function App() {
         padding: '16px',
       }}
     >
-      <h1 style={{ fontSize: '28px', margin: 0 }}>リアルタイム共有カウンター</h1>
+      <h1 style={{ fontSize: '28px', margin: 0 }}>
+        リアルタイム共有カウンター
+      </h1>
 
       <div
         style={{
@@ -56,22 +61,35 @@ function App() {
         }}
       >
         <Counter
-          label="カウンター A"
+          label="先頭のカウンター"
           value={counters.a}
           onIncrement={incrementA}
           onReset={resetA}
         />
         <Counter
-          label="カウンター B"
+          label="最後尾のカウンター"
           value={counters.b}
           onIncrement={incrementB}
           onReset={resetB}
         />
       </div>
 
-      <div style={{ marginTop: '16px', fontSize: '12px', color: '#777' }}>
+      <div
+        style={{
+          marginTop: '8px',
+          fontSize: '16px',
+          textAlign: 'center',
+        }}
+      >
+        差分（カウンターB - カウンターA）：{' '}
+        <span style={{ fontWeight: 'bold' }}>{diff}</span>
+      </div>
+
+      <div style={{ marginTop: '8px', fontSize: '12px', color: '#777' }}>
         接続状態:{' '}
-        <span style={{ fontWeight: 'bold', color: connected ? 'green' : 'red' }}>
+        <span
+          style={{ fontWeight: 'bold', color: connected ? 'green' : 'red' }}
+        >
           {connected ? 'オンライン' : 'オフライン'}
         </span>
       </div>
