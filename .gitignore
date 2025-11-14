@@ -1,0 +1,31 @@
+# --- OSごとのゴミファイル ---
+.DS_Store
+Thumbs.db
+
+# --- Node / npm ---
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# --- ログファイル ---
+*.log
+logs/
+debug.log
+
+# --- 環境変数ファイル ---
+.env
+.env.*
+!.env.example
+
+# --- エディタ設定 ---
+.vscode/
+.idea/
+*.swp
+
+# --- React(Vite) ビルド成果物 ---
+client/dist/
+
+# --- もし将来サーバー側でビルドするようになった時用 ---
+server/dist/
