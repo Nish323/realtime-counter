@@ -4,6 +4,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs'); // ★ 追加
 
 const app = express();
 app.use(cors());
@@ -29,7 +30,7 @@ io.on('connection', (socket) => {
   // 接続直後に現在のカウンター状態を送信
   socket.emit('countersUpdated', counters);
 
-  // どっちのカウンターを増やすか key ('a' | 'b') で受け取る
+  // ＋1
   socket.on('increment', (key) => {
     if (key !== 'a' && key !== 'b') return;
 
@@ -40,7 +41,7 @@ io.on('connection', (socket) => {
     io.emit('countersUpdated', counters);
   });
 
-  // リセットも同様に key 指定で
+  // リセット
   socket.on('reset', (key) => {
     if (key !== 'a' && key !== 'b') return;
 
@@ -50,16 +51,59 @@ io.on('connection', (socket) => {
     io.emit('countersUpdated', counters);
   });
 
+  // ★ 記録ボタンを押したときの処理
+  // data/(日付)/count.txt に「日時 先頭 最後尾 差分」を1行追記する
+  socket.on('record', async () => {
+    try {
+      const now = new Date();
+
+      const yyyy = now.getFullYear();
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      const dd = String(now.getDate()).padStart(2, '0');
+      const hh = String(now.getHours()).padStart(2, '0');
+      const mi = String(now.getMinutes()).padStart(2, '0');
+      const ss = String(now.getSeconds()).padStart(2, '0');
+
+      const dateFolder = `${yyyy}-${mm}-${dd}`; // 2025-11-14 みたいなフォルダ名
+      const dateTimeStr = `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`; // 1列目: 日時
+
+      const first = counters.a; // 先頭カウンター
+      const last = counters.b;  // 最後尾カウンター
+      const diff = last - first;
+
+      // data/(日付)/count.txt のパス
+      const dirPath = path.join(__dirname, '..', 'data', dateFolder);
+      const filePath = path.join(dirPath, 'count.txt');
+
+      // ディレクトリがなければ作成
+      await fs.promises.mkdir(dirPath, { recursive: true });
+
+      // 1行分のテキスト: 「日時 先頭 最後尾 差分」
+      const line = `${dateTimeStr} ${first} ${last} ${diff}\n`;
+
+      // 追記（ファイルが無ければ作成される）
+      await fs.promises.appendFile(filePath, line, 'utf8');
+
+      console.log('record saved:', line.trim());
+
+      // クライアントに成功通知（任意）
+      socket.emit('recordSaved', { success: true });
+    } catch (err) {
+      console.error('failed to save record:', err);
+      socket.emit('recordSaved', { success: false });
+    }
+  });
+
   socket.on('disconnect', () => {
     console.log('client disconnected:', socket.id);
   });
 });
 
-// React のビルド成果物を配信
+// React のビルド済みファイルを配信
 const clientDistPath = path.join(__dirname, '..', 'client', 'dist');
 app.use(express.static(clientDistPath));
 
-// フォールバック：どのパスでも index.html を返す
+// SPA 用のフォールバック
 app.use((req, res) => {
   res.sendFile(path.join(clientDistPath, 'index.html'));
 });

@@ -1,7 +1,7 @@
 // client/src/App.jsx
 import { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
-import Counter from './components/Counter/Counter';
+import Counter from './components/Counter/Counter'; // ← ここは構成に合わせて
 
 // ホスト名:4000 に Socket.IO で接続
 const socket = io(`http://${window.location.hostname}:4000`);
@@ -9,6 +9,7 @@ const socket = io(`http://${window.location.hostname}:4000`);
 function App() {
   const [counters, setCounters] = useState({ a: 0, b: 0 });
   const [connected, setConnected] = useState(false);
+  const [recordStatus, setRecordStatus] = useState(null); // 記録結果のメッセージ
 
   useEffect(() => {
     socket.on('connect', () => setConnected(true));
@@ -19,10 +20,22 @@ function App() {
       setCounters(newCounters);
     });
 
+    // 記録処理の結果
+    socket.on('recordSaved', (result) => {
+      if (result.success) {
+        setRecordStatus('記録しました');
+      } else {
+        setRecordStatus('記録に失敗しました');
+      }
+      // 2秒後にメッセージを消す
+      setTimeout(() => setRecordStatus(null), 2000);
+    });
+
     return () => {
       socket.off('connect');
       socket.off('disconnect');
       socket.off('countersUpdated');
+      socket.off('recordSaved');
     };
   }, []);
 
@@ -30,6 +43,9 @@ function App() {
   const incrementB = () => socket.emit('increment', 'b');
   const resetA = () => socket.emit('reset', 'a');
   const resetB = () => socket.emit('reset', 'b');
+
+  // 記録ボタン
+  const record = () => socket.emit('record');
 
   // 差分（最後尾 - 先頭） = B - A
   const diff = counters.b - counters.a;
@@ -51,6 +67,11 @@ function App() {
       <h1 style={{ fontSize: '28px', margin: 0 }}>
         リアルタイム共有カウンター
       </h1>
+      <p style={{ margin: 0, color: '#555', textAlign: 'center' }}>
+        カウンターA / カウンターB を
+        <br />
+        どの端末からでも別々にカウントできます
+      </p>
 
       <div
         style={{
@@ -61,19 +82,20 @@ function App() {
         }}
       >
         <Counter
-          label="先頭のカウンター"
+          label="カウンター A"
           value={counters.a}
           onIncrement={incrementA}
           onReset={resetA}
         />
         <Counter
-          label="最後尾のカウンター"
+          label="カウンター B"
           value={counters.b}
           onIncrement={incrementB}
           onReset={resetB}
         />
       </div>
 
+      {/* 差分表示 */}
       <div
         style={{
           marginTop: '8px',
@@ -84,6 +106,37 @@ function App() {
         差分（カウンターB - カウンターA）：{' '}
         <span style={{ fontWeight: 'bold' }}>{diff}</span>
       </div>
+
+      {/* 記録ボタン */}
+      <div style={{ marginTop: '8px' }}>
+        <button
+          onClick={record}
+          style={{
+            fontSize: '16px',
+            padding: '8px 16px',
+            borderRadius: '999px',
+            border: '1px solid #ccc',
+            cursor: 'pointer',
+            background: '#f0f0f0',
+          }}
+        >
+          記録
+        </button>
+      </div>
+
+      {/* 記録ステータス */}
+      {recordStatus && (
+        <div
+          style={{
+            marginTop: '4px',
+            fontSize: '12px',
+            color: '#555',
+            textAlign: 'center',
+          }}
+        >
+          {recordStatus}
+        </div>
+      )}
 
       <div style={{ marginTop: '8px', fontSize: '12px', color: '#777' }}>
         接続状態:{' '}
