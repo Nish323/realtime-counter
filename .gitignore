@@ -29,3 +29,5 @@ client/dist/
 
 # --- もし将来サーバー側でビルドするようになった時用 ---
 server/dist/
+
+data/*
