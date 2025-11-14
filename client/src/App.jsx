@@ -67,11 +67,6 @@ function App() {
       <h1 style={{ fontSize: '28px', margin: 0 }}>
         リアルタイム共有カウンター
       </h1>
-      <p style={{ margin: 0, color: '#555', textAlign: 'center' }}>
-        カウンターA / カウンターB を
-        <br />
-        どの端末からでも別々にカウントできます
-      </p>
 
       <div
         style={{
@@ -82,13 +77,13 @@ function App() {
         }}
       >
         <Counter
-          label="カウンター A"
+          label="先頭カウンター"
           value={counters.a}
           onIncrement={incrementA}
           onReset={resetA}
         />
         <Counter
-          label="カウンター B"
+          label="最後尾カウンター"
           value={counters.b}
           onIncrement={incrementB}
           onReset={resetB}
@@ -103,7 +98,7 @@ function App() {
           textAlign: 'center',
         }}
       >
-        差分（カウンターB - カウンターA）：{' '}
+        並んでいる人数（最後尾カウンター - 先頭カウンター）：{' '}
         <span style={{ fontWeight: 'bold' }}>{diff}</span>
       </div>
 
