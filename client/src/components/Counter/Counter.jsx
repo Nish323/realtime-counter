@@ -1,50 +1,28 @@
 // src/components/Counter.jsx
+import './Counter.css';
+
 function Counter({ label, value, onIncrement, onReset }) {
   return (
-    <div
-      style={{
-        border: '1px solid #ddd',
-        borderRadius: '12px',
-        padding: '16px',
-        minWidth: '220px',
-      }}
-    >
-      <h2 style={{ fontSize: '18px', marginTop: 0, marginBottom: '8px' }}>
+    <div className="counter">
+      <h2 className="counter-title">
         {label}
       </h2>
-      <div
-        style={{
-          fontSize: '40px',
-          fontWeight: 'bold',
-          marginBottom: '16px',
-          textAlign: 'center',
-        }}
-      >
+
+      <div className="counter-value">
         {value}
       </div>
-      <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+
+      <div className="counter-buttons">
         <button
           onClick={onIncrement}
-          style={{
-            fontSize: '18px',
-            padding: '8px 16px',
-            borderRadius: '999px',
-            border: 'none',
-            cursor: 'pointer',
-          }}
+          className="counter-button counter-button--increment"
         >
           ＋1
         </button>
+
         <button
           onClick={onReset}
-          style={{
-            fontSize: '14px',
-            padding: '6px 14px',
-            borderRadius: '999px',
-            border: '1px solid #ccc',
-            cursor: 'pointer',
-            background: '#f7f7f7',
-          }}
+          className="counter-button counter-button--reset"
         >
           リセット
         </button>
