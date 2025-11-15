@@ -41,6 +41,8 @@ function App() {
 
   const incrementA = () => socket.emit('increment', 'a');
   const incrementB = () => socket.emit('increment', 'b');
+  const decrementA = () => socket.emit('decrement', 'a');
+  const decrementB = () => socket.emit('decrement', 'b');
   const resetA = () => socket.emit('reset', 'a');
   const resetB = () => socket.emit('reset', 'b');
 
@@ -80,12 +82,14 @@ function App() {
           label="先頭カウンター"
           value={counters.a}
           onIncrement={incrementA}
+          onDecrement={decrementA}
           onReset={resetA}
         />
         <Counter
           label="最後尾カウンター"
           value={counters.b}
           onIncrement={incrementB}
+          onDecrement={decrementB}
           onReset={resetB}
         />
       </div>

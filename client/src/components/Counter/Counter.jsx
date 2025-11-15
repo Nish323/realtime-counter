@@ -1,7 +1,7 @@
 // src/components/Counter.jsx
 import './Counter.css';
 
-function Counter({ label, value, onIncrement, onReset }) {
+function Counter({ label, value, onIncrement, onDecrement, onReset }) {
   return (
     <div className="counter">
       <h2 className="counter-title">
@@ -18,6 +18,13 @@ function Counter({ label, value, onIncrement, onReset }) {
           className="counter-button counter-button--increment"
         >
           ＋1
+        </button>
+
+        <button
+          onClick={onDecrement}
+          className="counter-button counter-button--increment"
+        >
+          ー1
         </button>
 
         <button

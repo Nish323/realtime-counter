@@ -4,7 +4,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
 const path = require('path');
-const fs = require('fs'); // ★ 追加
+const fs = require('fs');
 
 const app = express();
 app.use(cors());
@@ -41,6 +41,17 @@ io.on('connection', (socket) => {
     io.emit('countersUpdated', counters);
   });
 
+  // ー1
+  socket.on('decrement', (key) => {
+    if (key !== 'a' && key !== 'b') return;
+
+    counters[key] -= 1;
+    console.log(`counter ${key} decremented:`, counters[key]);
+
+    // 全クライアントに2つ分まとめて送信
+    io.emit('countersUpdated', counters);
+  });
+
   // リセット
   socket.on('reset', (key) => {
     if (key !== 'a' && key !== 'b') return;
@@ -51,7 +62,7 @@ io.on('connection', (socket) => {
     io.emit('countersUpdated', counters);
   });
 
-  // ★ 記録ボタンを押したときの処理
+  // 記録ボタンを押したときの処理
   // data/(日付)/count.txt に「日時 先頭 最後尾 差分」を1行追記する
   socket.on('record', async () => {
     try {
@@ -64,8 +75,8 @@ io.on('connection', (socket) => {
       const mi = String(now.getMinutes()).padStart(2, '0');
       const ss = String(now.getSeconds()).padStart(2, '0');
 
-      const dateFolder = `${yyyy}-${mm}-${dd}`; // 2025-11-14 みたいなフォルダ名
-      const dateTimeStr = `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`; // 1列目: 日時
+      const dateFolder = `${yyyy}-${mm}-${dd}`;
+      const dateTimeStr = `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
 
       const first = counters.a; // 先頭カウンター
       const last = counters.b;  // 最後尾カウンター
