@@ -1,15 +1,18 @@
 // client/src/App.jsx
 import { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
-import Counter from './components/Counter/Counter'; // ← ここは構成に合わせて
+import Counter from './components/Counter/Counter';
 
 // ホスト名:4000 に Socket.IO で接続
-const socket = io(`http://${window.location.hostname}:4000`);
+// const socket = io(`http://${window.location.hostname}:4000`);
+
+// サーバーとフロントが同じOriginで動く
+const socket = io();
 
 function App() {
   const [counters, setCounters] = useState({ a: 0, b: 0 });
   const [connected, setConnected] = useState(false);
-  const [recordStatus, setRecordStatus] = useState(null); // 記録結果のメッセージ
+  const [recordStatus, setRecordStatus] = useState(null);
 
   useEffect(() => {
     socket.on('connect', () => setConnected(true));
