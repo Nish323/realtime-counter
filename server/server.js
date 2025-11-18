@@ -79,7 +79,7 @@ io.on('connection', (socket) => {
       const dateTimeStr = `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
 
       const first = counters.a; // 先頭カウンター
-      const last = counters.b;  // 最後尾カウンター
+      const last = counters.b; // 最後尾カウンター
       const diff = last - first;
 
       // data/(日付)/count.txt のパス
@@ -108,6 +108,91 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     console.log('client disconnected:', socket.id);
   });
+});
+
+// GET /api/download/20251118 → data/2025-11-18/count.txt
+app.get('/api/download/:date', async (req, res) => {
+  try {
+    const { date } = req.params;
+
+    // YYYYMMDD の簡易バリデーション
+    if (!/^\d{8}$/.test(date)) {
+      return res.status(400).send('invalid date format (use YYYYMMDD)');
+    }
+
+    const yyyy = date.slice(0, 4);
+    const mm = date.slice(4, 6);
+    const dd = date.slice(6, 8);
+    const folderName = `${yyyy}-${mm}-${dd}`;
+
+    const dirPath = path.join(__dirname, '..', 'data', folderName);
+    const filePath = path.join(dirPath, 'count.txt');
+
+    // ファイルが存在するかチェック
+    try {
+      await fs.promises.access(filePath, fs.constants.R_OK);
+    } catch {
+      return res.status(404).send('count.txt not found for this date');
+    }
+
+    // ダウンロード用ヘッダ
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${folderName}-count.txt"`
+    );
+
+    const content = await fs.promises.readFile(filePath, 'utf8');
+    res.send(content);
+  } catch (err) {
+    console.error('download by date error:', err);
+    if (!res.headersSent) {
+      res.status(500).send('download error');
+    }
+  }
+});
+
+app.get('/api/download', async (req, res) => {
+  try {
+    const dataDir = path.join(__dirname, '..', 'data');
+
+    // dataフォルダが存在するかチェック
+    try {
+      await fs.promises.access(dataDir, fs.constants.R_OK);
+    } catch {
+      return res.status(404).send('data directory not found');
+    }
+
+    // レスポンスヘッダを設定
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename="counter-data.zip"'
+    );
+
+    const archive = archiver('zip', { zlib: { level: 9 } });
+
+    archive.on('error', (err) => {
+      console.error('archive error:', err);
+      if (!res.headersSent) {
+        res.status(500).send('archive error');
+      }
+    });
+
+    // zip をレスポンスにストリーム
+    archive.pipe(res);
+
+    // dataディレクトリ全体をzipに追加（ルート直下に展開）
+    archive.directory(dataDir, false);
+
+    // 圧縮開始
+    archive.finalize();
+  } catch (err) {
+    console.error('download error:', err);
+    if (!res.headersSent) {
+      res.status(500).send('download error');
+    }
+  }
 });
 
 // React のビルド済みファイルを配信
