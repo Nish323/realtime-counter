@@ -73,10 +73,20 @@ function App() {
         リアルタイム共有カウンター
       </h1>
 
+      {/* 差分表示 */}
+      <div
+        style={{
+          fontSize: '24px',
+          textAlign: 'center',
+        }}
+      >
+        並んでいる人数： <span style={{ fontWeight: 'bold' }}>{diff}</span>
+      </div>
+
       <div
         style={{
           display: 'flex',
-          gap: '16px',
+          gap: '24px',
           flexWrap: 'wrap',
           justifyContent: 'center',
         }}
@@ -95,18 +105,6 @@ function App() {
           onDecrement={decrementB}
           onReset={resetB}
         />
-      </div>
-
-      {/* 差分表示 */}
-      <div
-        style={{
-          marginTop: '8px',
-          fontSize: '16px',
-          textAlign: 'center',
-        }}
-      >
-        並んでいる人数（最後尾カウンター - 先頭カウンター）：{' '}
-        <span style={{ fontWeight: 'bold' }}>{diff}</span>
       </div>
 
       {/* 記録ボタン */}
