@@ -1,4 +1,3 @@
-// server/server.js
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -27,6 +26,12 @@ let counters = {
   b: 0,
 };
 
+// 記録タイマーの状態管理
+let autoRecordIntervalId = null;
+
+// 最後尾の位置
+let globalSelectedValue = 0;
+
 async function saveRecord() {
   const now = new Date();
 
@@ -42,15 +47,16 @@ async function saveRecord() {
 
   const first = counters.a; // 先頭カウンター
   const last = counters.b; // 最後尾カウンター
-  const diff = last - first;
+  const diff = last - first; // Google スプレッドシートに送信
 
-  // Google スプレッドシートに送信
   if (SHEET_WEBHOOK_URL) {
     const payload = {
       datetime: dateTimeStr,
       first,
       last,
       diff,
+      recordedValue: globalSelectedValue,
+      recordedValueLabel: last,
     };
 
     try {
@@ -65,30 +71,28 @@ async function saveRecord() {
 }
 
 io.on('connection', (socket) => {
-  console.log('client connected:', socket.id);
+  console.log('client connected:', socket.id); // 接続直後に現在のカウンター状態を送信
 
-  // 接続直後に現在のカウンター状態を送信
   socket.emit('countersUpdated', counters);
+  socket.emit('selectedValueUpdated', globalSelectedValue);
 
-  // ＋1
+  // +1
   socket.on('increment', (key) => {
     if (key !== 'a' && key !== 'b') return;
 
     counters[key] += 1;
-    console.log(`counter ${key} incremented:`, counters[key]);
+    console.log(`counter ${key} incremented:`, counters[key]); // 全クライアントに2つ分まとめて送信
 
-    // 全クライアントに2つ分まとめて送信
     io.emit('countersUpdated', counters);
   });
 
-  // ー1
+  // -1
   socket.on('decrement', (key) => {
     if (key !== 'a' && key !== 'b') return;
 
     counters[key] -= 1;
-    console.log(`counter ${key} decremented:`, counters[key]);
+    console.log(`counter ${key} decremented:`, counters[key]); // 全クライアントに2つ分まとめて送信
 
-    // 全クライアントに2つ分まとめて送信
     io.emit('countersUpdated', counters);
   });
 
@@ -102,11 +106,34 @@ io.on('connection', (socket) => {
     io.emit('countersUpdated', counters);
   });
 
-  // 記録ボタンを押したときの処理
+  // 最後尾の位置番号の処理
+  socket.on('updateSelectedValue', (newValue) => {
+    const value = Number(newValue);
+    if (typeof value !== 'number' || isNaN(value) || value < 0 || value > 25)
+      return;
+
+    globalSelectedValue = value;
+    console.log('Selected value updated:', globalSelectedValue);
+
+    // 全クライアントに新しい値をブロードキャスト
+    io.emit('selectedValueUpdated', globalSelectedValue);
+  });
+
+  // 記録ボタンの処理
   socket.on('record', async () => {
     try {
       await saveRecord();
-      // 手動記録の結果をフロントに返す
+
+      if (autoRecordIntervalId === null) {
+        console.log('Starting 10s auto-record timer.');
+        autoRecordIntervalId = setInterval(() => {
+          saveRecord().catch((err) => {
+            console.error('failed to save record (auto):', err);
+          });
+        }, 10 * 1000);
+        io.emit('recordingStatusUpdated', { isRecording: true });
+      }
+
       socket.emit('recordSaved', { success: true });
     } catch (err) {
       console.error('failed to save record (manual):', err);
@@ -117,14 +144,16 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     console.log('client disconnected:', socket.id);
   });
-});
 
-// 10秒ごとに自動記録
-setInterval(() => {
-  saveRecord().catch((err) => {
-    console.error('failed to save record (auto):', err);
+  socket.on('recordStop', () => {
+    if (autoRecordIntervalId !== null) {
+      clearInterval(autoRecordIntervalId); // タイマーを解除
+      autoRecordIntervalId = null; // IDをリセット
+      console.log('Auto-record timer stopped.');
+      io.emit('recordingStatusUpdated', { isRecording: false });
+    }
   });
-}, 10 * 1000);
+});
 
 // React のビルド済みファイルを配信
 const clientDistPath = path.join(__dirname, '..', 'client', 'dist');
