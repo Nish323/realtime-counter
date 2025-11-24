@@ -42,12 +42,12 @@ async function saveRecord() {
   const mi = String(now.getMinutes()).padStart(2, '0');
   const ss = String(now.getSeconds()).padStart(2, '0');
 
-  const dateFolder = `${yyyy}-${mm}-${dd}`;
   const dateTimeStr = `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
 
   const first = counters.a; // 先頭カウンター
   const last = counters.b; // 最後尾カウンター
-  const diff = last - first; // Google スプレッドシートに送信
+  const selectedValue = globalSelectedValue; // 最後尾の位置
+  const diff = last - first; // 差分
 
   if (SHEET_WEBHOOK_URL) {
     const payload = {
@@ -55,8 +55,7 @@ async function saveRecord() {
       first,
       last,
       diff,
-      recordedValue: globalSelectedValue,
-      recordedValueLabel: last,
+      selectedValue,
     };
 
     try {
