@@ -1,16 +1,21 @@
-// src/components/Counter.jsx
 import './Counter.css';
 
 function Counter({ label, value, onIncrement, onDecrement, onReset }) {
+  const handleResetClick = () => {
+    const isConfirmed = window.confirm(
+      `${label} を本当にリセットしますか？\n（現在値: ${value}）`
+    );
+
+    if (isConfirmed) {
+      onReset();
+    }
+  };
+
   return (
     <div className="counter">
-      <h2 className="counter-title">
-        {label}
-      </h2>
+      <h2 className="counter-title">{label}</h2>
 
-      <div className="counter-value">
-        {value}
-      </div>
+      <div className="counter-value">{value}</div>
 
       <div className="counter-buttons">
         <button
@@ -28,7 +33,7 @@ function Counter({ label, value, onIncrement, onDecrement, onReset }) {
         </button>
 
         <button
-          onClick={onReset}
+          onClick={handleResetClick}
           className="counter-button counter-button--reset"
         >
           リセット
