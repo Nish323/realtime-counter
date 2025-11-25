@@ -32,6 +32,8 @@ let autoRecordIntervalId = null;
 // 最後尾の位置
 let globalSelectedValue = 0;
 
+let isRecording = false;
+
 async function saveRecord() {
   const now = new Date();
 
@@ -74,6 +76,7 @@ io.on('connection', (socket) => {
 
   socket.emit('countersUpdated', counters);
   socket.emit('selectedValueUpdated', globalSelectedValue);
+  socket.emit('recordingStatusUpdated', { isRecording });
 
   // +1
   socket.on('increment', (key) => {
@@ -130,7 +133,8 @@ io.on('connection', (socket) => {
             console.error('failed to save record (auto):', err);
           });
         }, 10 * 1000);
-        io.emit('recordingStatusUpdated', { isRecording: true });
+        isRecording = true;
+        io.emit('recordingStatusUpdated', { isRecording });
       }
 
       socket.emit('recordSaved', { success: true });
@@ -149,7 +153,8 @@ io.on('connection', (socket) => {
       clearInterval(autoRecordIntervalId); // タイマーを解除
       autoRecordIntervalId = null; // IDをリセット
       console.log('Auto-record timer stopped.');
-      io.emit('recordingStatusUpdated', { isRecording: false });
+      isRecording = false;
+      io.emit('recordingStatusUpdated', { isRecording });
     }
   });
 });
