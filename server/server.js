@@ -30,7 +30,7 @@ let counters = {
 let autoRecordIntervalId = null;
 
 // 最後尾の位置
-let globalSelectedValue = 0;
+let globalSelectedValue = -1;
 
 let isRecording = false;
 
@@ -111,7 +111,7 @@ io.on('connection', (socket) => {
   // 最後尾の位置番号の処理
   socket.on('updateSelectedValue', (newValue) => {
     const value = Number(newValue);
-    if (typeof value !== 'number' || isNaN(value) || value < 0 || value > 25)
+    if (typeof value !== 'number' || isNaN(value) || value < -1 || value > 25)
       return;
 
     globalSelectedValue = value;

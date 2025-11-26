@@ -9,7 +9,7 @@ function App() {
   const [connected, setConnected] = useState(false);
   const [recordStatus, setRecordStatus] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
-  const [selectedValue, setSelectedValue] = useState(0);
+  const [selectedValue, setSelectedValue] = useState(-1);
 
   useEffect(() => {
     socket.on('connect', () => setConnected(true));
@@ -148,11 +148,14 @@ function App() {
             border: '1px solid #ccc',
           }}
         >
-          {Array.from({ length: 26 }, (_, i) => (
-            <option key={i} value={i}>
-              {i}
-            </option>
-          ))}
+          {Array.from({ length: 27 }, (_, i) => {
+            const val = i - 1;
+            return (
+              <option key={val} value={val}>
+                {val}
+              </option>
+            );
+          })}
         </select>
       </div>
 
